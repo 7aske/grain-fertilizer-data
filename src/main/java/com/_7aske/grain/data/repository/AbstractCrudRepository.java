@@ -68,11 +68,35 @@ public class AbstractCrudRepository<T, ID> implements CrudRepository<T, ID> {
     }
 
     @Override
+    public void deleteById(ID id) {
+        try(EntityManager entityManager = sessionFactory.createEntityManager()) {
+            entityManager.getMetamodel().entity(clazz);
+            T entity = entityManager.find(clazz, id);
+            if (entity == null) {
+                return;
+            }
+            entityManager.getTransaction().begin();
+            entityManager.remove(entity);
+            entityManager.getTransaction().commit();
+        }
+    }
+
+    @Override
     public void delete(T entity) {
         try(EntityManager entityManager = sessionFactory.createEntityManager()) {
             entityManager.getTransaction().begin();
             entityManager.remove(entity);
             entityManager.getTransaction().commit();
+        }
+    }
+
+    @Override
+    public long count() {
+        try(EntityManager entityManager = sessionFactory.createEntityManager()) {
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaQuery<Long> query = cb.createQuery(Long.class);
+            query.select(cb.count(query.from(clazz)));
+            return entityManager.createQuery(query).getSingleResult();
         }
     }
 
