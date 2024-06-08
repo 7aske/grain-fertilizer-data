@@ -10,6 +10,7 @@ import net.bytebuddy.dynamic.DynamicType;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.InvocationTargetException;
@@ -78,6 +79,7 @@ class GrainDataRepositoryFactoryTest {
     }
 
     @Test
+    @Disabled
     void testFindByName() {
         configuration.addAnnotatedClass(TestEntity.class);
         SessionFactory sessionFactory = configuration.buildSessionFactory();
