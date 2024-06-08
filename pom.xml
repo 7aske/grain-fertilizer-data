@@ -10,7 +10,7 @@
 
     <groupId>com.7aske.grain</groupId>
     <artifactId>grain-fertilizer-data</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>grain-fertilizer-data</name>
     <description>Grain Data Starter</description>
