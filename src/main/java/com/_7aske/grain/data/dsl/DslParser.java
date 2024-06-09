@@ -1,104 +1,115 @@
 package com._7aske.grain.data.dsl;
 
-import com._7aske.grain.data.dsl.token.*;
+import com._7aske.grain.data.dsl.ast.*;
+import com._7aske.grain.data.dsl.token.BinaryToken;
+import com._7aske.grain.data.dsl.token.FieldToken;
+import com._7aske.grain.data.dsl.token.OperationToken;
+import com._7aske.grain.data.dsl.token.Token;
 import com._7aske.grain.data.meta.EntityInformation;
-import com._7aske.grain.util.StringUtils;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.List;
+
+import static com._7aske.grain.data.dsl.Operation.*;
 
 public class DslParser {
-    public List<Token> parse(String dsl, EntityInformation entityInformation, Object[] args) {
-        List<Token> tokens = new ArrayList<>();
+    private int argIndex;
+    private final EntityInformation entityInformation;
+    private final Object[] args;
+    private final Deque<Node> stack = new ArrayDeque<>();
+    private Deque<Token> tokens;
 
-        for (RootOperation rootOperation : RootOperation.values()) {
-            if (dsl.startsWith(rootOperation.getRepr())) {
-                tokens.add(new RootOperationToken(rootOperation));
-                dsl = dsl.substring(rootOperation.getRepr().length());
-                break;
+    public DslParser(EntityInformation entityInformation, Object[] args) {
+        this.entityInformation = entityInformation;
+        this.args = args;
+        this.argIndex = 0;
+    }
+
+
+    public ParsingResult parse(String dsl) {
+        ParsingResult parsingResult = new ParsingResult();
+
+        LexingResult lexingResult = new DslLexer().lex(dsl);
+        parsingResult.setRootOperation(lexingResult.getRootOperation());
+
+        this.tokens = lexingResult.getTokens();
+
+        while (!tokens.isEmpty()) {
+            Node current = createNode(tokens.poll());
+            stack.push(current);
+        }
+
+        parsingResult.setTree(stack.poll());
+
+        return parsingResult;
+    }
+
+    private Node parseNode() {
+        Node node = createNode(tokens.poll());
+        if ((node instanceof FieldNode || node instanceof ValueNode) && !tokens.isEmpty()) {
+            stack.push(node);
+            node = parseNode();
+        }
+
+        return node;
+    }
+
+    private Node createNode(Token token) {
+        Node node = null;
+        if (token instanceof FieldToken fieldToken) {
+            if (!entityInformation.hasField(fieldToken.getField())) {
+                throw new IllegalArgumentException("Field not found: " + fieldToken.getField());
+            }
+            node = new FieldNode(fieldToken.getField());
+            if (tokens.isEmpty()) {
+                node = new OperationNode(node, EQUALS, new ValueNode(args[argIndex++]));
+            }
+        } else if (token instanceof OperationToken operationToken) {
+            if (operationToken.getOperation().isLogical()) {
+                node = new OperationNode(stack.poll(), operationToken.getOperation(), parseNode());
+            } else if (operationToken.getOperation().isUnary()) {
+                node = new OperationNode(stack.poll(), operationToken.getOperation(), null);
+                if (!tokens.isEmpty()) {
+                    stack.push(node);
+                    node = parseNode();
+                } else {
+                    Node field = new OperationNode(((BinaryNode) node).getLeft(), EQUALS, new ValueNode(args[argIndex++]));
+                    ((BinaryNode) node).setLeft(field);
+                }
+            } else if (operationToken.getOperation().isLiteral()) {
+                node = new OperationNode(stack.poll(), operationToken.getOperation(), new ValueNode(args[argIndex++]));
+            } else {
+                throw new IllegalArgumentException("Unknown operation: " + operationToken.getOperation());
+            }
+        } else {
+            throw new IllegalArgumentException("Unknown token: " + token);
+        }
+
+        if (node instanceof OperationNode operationNode) {
+            node = fixPrecedenceRight(operationNode);
+        }
+
+        return node;
+    }
+
+    private Node fixPrecedenceRight(OperationNode node) {
+        if (node.getRight() instanceof OperationNode rightOperationNode) {
+            if (rightOperationNode.getOperation().getPrecedence() < node.getOperation().getPrecedence()) {
+                node.setRight(rightOperationNode.getLeft());
+                rightOperationNode.setLeft(node);
+                return rightOperationNode;
             }
         }
 
-        // NameAndAge
-        Deque<Token> stack = new ArrayDeque<>();
-        int argIndex = 0;
-        while (!dsl.isEmpty()) {
-            StringBuilder token = new StringBuilder();
-            do {
-                token.append(dsl.charAt(0));
-                dsl = dsl.substring(1);
-                for (Operation operation : Operation.values()) {
-                    if (token.toString().endsWith(operation.getRepr())) {
-                        String field = StringUtils.uncapitalize(token.substring(0, token.length() - operation.getRepr().length()));
-                        token.setLength(0);
-                        // left?
-                        Token left = null;
-                        if (!field.isEmpty()) {
-                            if (!entityInformation.hasField(field)) {
-                                throw new RuntimeException("Invalid field: " + field);
-                            }
-                            left = new FieldToken(field);
-                        } else {
-                            left = stack.pop();
-                        }
-
-                        Token current = new OperationToken(left, operation, null);
-                        stack.push(current);
-                    }
-                }
-
-                for (QueryOperation queryOperation : QueryOperation.values()) {
-                    if (token.toString().endsWith(queryOperation.getRepr())) {
-                        String field = StringUtils.uncapitalize(token.substring(0, token.length() - queryOperation.getRepr().length()));
-                        token.setLength(0);
-
-                        Token fieldToken = null;
-                        if (!field.isEmpty()) {
-                            if (!entityInformation.hasField(field)) {
-                                throw new RuntimeException("Invalid field: " + field);
-                            }
-                            fieldToken = new FieldToken(field);
-                        }
-
-                        Token current = null;
-                        if (fieldToken == null) {
-                            current = stack.pop();
-                            if (current instanceof OperationToken operationToken) {
-                                if (operationToken.getRight() instanceof QueryOperationToken queryOperationToken) {
-                                    queryOperationToken.setLeft(new QueryOperationToken(queryOperationToken.getLeft(), queryOperation, queryOperationToken.getRight()));
-                                    queryOperationToken.setRight(null);
-                                } else {
-                                    throw new RuntimeException("Invalid query operation");
-                                }
-                            } else {
-                                stack.push(current);
-                            }
-                        } else {
-                            ValueToken valueToken = new ValueToken(args[argIndex++]);
-                            current = new QueryOperationToken(fieldToken, queryOperation, valueToken);
-                        }
-
-                        if (!stack.isEmpty()) {
-                            Token left = stack.pop();
-                            if (left instanceof OperationToken leftOperationToken) {
-                                leftOperationToken.setRight(current);
-                                stack.push(leftOperationToken);
-                            } else {
-                                stack.push(left);
-                            }
-                        } else {
-                            stack.push(current);
-                        }
-                    }
-                }
-            } while (!dsl.isBlank());
-
-            if (!token.toString().isBlank()) {
-                stack.push(new FieldToken(token.toString()));
+        if (node.getLeft() instanceof OperationNode leftOperationNode) {
+            if (leftOperationNode.getOperation().getPrecedence() < node.getOperation().getPrecedence()) {
+                node.setLeft(leftOperationNode.getLeft());
+                leftOperationNode.setLeft(node);
+                return leftOperationNode;
             }
         }
 
-        tokens.addAll(stack);
-
-        return tokens;
+        return node;
     }
 }

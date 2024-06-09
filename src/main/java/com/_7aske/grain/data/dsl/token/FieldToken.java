@@ -1,7 +1,7 @@
 package com._7aske.grain.data.dsl.token;
 
 public class FieldToken extends Token {
-    private final String field;
+    private String field;
 
     public FieldToken(String field) {
         this.field = field;
@@ -13,6 +13,8 @@ public class FieldToken extends Token {
 
     @Override
     public String toString() {
-        return field;
+        return "FieldToken{" +
+                "field='" + field + '\'' +
+                '}';
     }
 }

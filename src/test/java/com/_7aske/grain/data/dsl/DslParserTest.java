@@ -1,9 +1,8 @@
 package com._7aske.grain.data.dsl;
 
-import com._7aske.grain.data.dsl.token.Token;
+import com._7aske.grain.data.dsl.ast.Node;
 import com._7aske.grain.data.meta.EntityField;
 import com._7aske.grain.data.meta.EntityInformation;
-import com._7aske.grain.web.page.Pageable;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -14,7 +13,8 @@ class DslParserTest {
 
     @Test
     void testTokenize() {
-        String methodName = "findByNameLikeAndAgeNotGreaterThan";
+//        String methodName = "findByNameLikeAndAgeNotGreaterThan";
+        String methodName = "findByNameAndAgeNot";
 
         EntityInformation entityInformation = new EntityInformation(Object.class);
         entityInformation.setEntityFields(List.of(
@@ -22,12 +22,14 @@ class DslParserTest {
                 new EntityField("age", "age", Integer.class)
         ));
 
-        DslParser parser = new DslParser();
-        List<Token> tokens = parser.parse(methodName, entityInformation, new Object[]{"John", 20});
+        DslParser parser = new DslParser(entityInformation, new Object[]{"John", 20});
+        ParsingResult parsingResult = parser.parse(methodName);
 
-        System.out.println(tokens);
+        System.out.println(parsingResult);
+        Node tree = parsingResult.getTree();
 
-        assertEquals(2, tokens.size());
+        assertEquals(RootOperation.FIND_BY, parsingResult.getRootOperation());
+        assertNotNull(tree);
     }
 
 }

@@ -1,7 +1,7 @@
 package com._7aske.grain.data.dsl.token;
 
-public class ValueToken extends Token {
-    private final Object value;
+public class ValueToken {
+    private Object value;
 
     public ValueToken(Object value) {
         this.value = value;
@@ -13,6 +13,8 @@ public class ValueToken extends Token {
 
     @Override
     public String toString() {
-        return value.toString();
+        return "ValueToken{" +
+                "value=" + value +
+                '}';
     }
 }

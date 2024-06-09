@@ -48,7 +48,7 @@ class GrainDataRepositoryFactoryTest {
     }
 
     public interface TestRepository extends CrudRepository<TestEntity, Long> {
-        List<TestEntity> findAllByName(String name);
+        List<TestEntity> findAllByNameNotEquals(String name);
     }
 
     Configuration configuration;
@@ -91,7 +91,8 @@ class GrainDataRepositoryFactoryTest {
         entity.setName("test");
         testRepository.save(entity);
 
-        List<TestEntity> found = ((TestRepository) testRepository).findAllByName("test");
+        List<TestEntity> found = ((TestRepository) testRepository).findAllByNameNotEquals("test1");
+
         assertNotNull(found);
         assertEquals(1, found.size());
         assertEquals("test", found.get(0).getName());
