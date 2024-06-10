@@ -2,7 +2,6 @@ package com._7aske.grain.data.dsl.ast;
 
 import com._7aske.grain.data.dsl.ArgumentEvaluator;
 import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.From;
 import jakarta.persistence.criteria.Path;
 
 public class JoinNode extends NavigableNode {
@@ -24,6 +23,6 @@ public class JoinNode extends NavigableNode {
 
     @Override
     public <T> Expression<T> toPredicate(ArgumentEvaluator evaluator) {
-        return ((Path<?>)parent.toPredicate(evaluator)).get(field);
+        return ((Path<?>) getParent().toPredicate(evaluator)).get(getField());
     }
 }

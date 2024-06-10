@@ -5,7 +5,6 @@ import com._7aske.grain.data.dsl.token.FieldToken;
 import com._7aske.grain.data.dsl.token.OperationToken;
 import com._7aske.grain.data.dsl.token.Token;
 import com._7aske.grain.data.meta.EntityInformation;
-import org.hibernate.mapping.Join;
 
 import java.util.ArrayDeque;
 import java.util.Deque;

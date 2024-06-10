@@ -36,8 +36,7 @@ public class HibernateEntityTypeConverter {
                 id.getJavaType(),
                 id.getPersistentAttributeType() != Attribute.PersistentAttributeType.BASIC
                         ? convert(entityManager, getAttributeType(id))
-                        : null,
-                id.isCollection()
+                        : null
         ));
 
         List<EntityField> entityFields =
@@ -54,8 +53,7 @@ public class HibernateEntityTypeConverter {
                                     getAttributeType(attr),
                                     attr.getPersistentAttributeType() != Attribute.PersistentAttributeType.BASIC
                                             ? convert(entityManager, getAttributeType(attr))
-                                            : null,
-                                    attr.isCollection()
+                                            : null
                             );
 
                             fieldCache.put(attr, entityField);

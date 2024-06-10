@@ -17,8 +17,8 @@ class DslLexerTest {
     void lex() {
         EntityInformation entityInformation = new EntityInformation(null);
         entityInformation.setEntityFields(List.of(
-                new EntityField("name", "name", String.class, null, false),
-                new EntityField("age", "age", Integer.class, null, false)
+                new EntityField("name", "name", String.class, null),
+                new EntityField("age", "age", Integer.class, null)
 
         ));
         DslLexer lexer = new DslLexer(entityInformation);
@@ -39,8 +39,8 @@ class DslLexerTest {
     void lexJoin() {
         EntityInformation entityInformation = new EntityInformation(null);
         entityInformation.setEntityFields(List.of(
-                new EntityField("name", "name", String.class, null, false),
-                new EntityField("age", "age", Integer.class, null, false)
+                new EntityField("name", "name", String.class, null),
+                new EntityField("age", "age", Integer.class, null)
 
         ));
         DslLexer lexer = new DslLexer(entityInformation);

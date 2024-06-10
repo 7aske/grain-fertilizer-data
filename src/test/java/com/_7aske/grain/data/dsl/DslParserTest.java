@@ -18,8 +18,8 @@ class DslParserTest {
 
         EntityInformation entityInformation = new EntityInformation(null);
         entityInformation.setEntityFields(List.of(
-                new EntityField("name", "name", String.class, null, false),
-                new EntityField("age", "age", Integer.class, null, false)
+                new EntityField("name", "name", String.class, null),
+                new EntityField("age", "age", Integer.class, null)
         ));
 
         DslParser parser = new DslParser(entityInformation);

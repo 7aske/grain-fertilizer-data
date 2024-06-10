@@ -2,14 +2,15 @@ package com._7aske.grain.data.factory;
 
 import com._7aske.grain.data.repository.CrudRepository;
 import jakarta.persistence.*;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -21,7 +22,6 @@ class GrainDataRepositoryFactoryTest {
     }
 
     public interface TestCityRepository extends CrudRepository<TestCityEntity, Long> {
-        List<TestCityEntity> findAllByAddressesStreet(String street);
     }
 
     public interface TestUserRepository extends CrudRepository<TestUserEntity, Long> {
@@ -34,6 +34,7 @@ class GrainDataRepositoryFactoryTest {
 
     Configuration configuration;
     GrainDataRepositoryFactory factory;
+    SessionFactory sessionFactory;
 
     @BeforeEach
     void setup() {
@@ -45,7 +46,7 @@ class GrainDataRepositoryFactoryTest {
         configuration.addAnnotatedClass(TestUserEntity.class);
         configuration.addAnnotatedClass(TestAddressEntity.class);
         configuration.addAnnotatedClass(TestCityEntity.class);
-        SessionFactory sessionFactory = configuration.buildSessionFactory();
+        sessionFactory = configuration.buildSessionFactory();
         factory = new GrainDataRepositoryFactory(sessionFactory);
     }
 
@@ -154,43 +155,6 @@ class GrainDataRepositoryFactoryTest {
         assertNotNull(found);
         assertEquals(1, found.size());
         assertEquals("test", found.get(0).getName());
-    }
-
-    @Test
-    void testOneToMany() {
-        TestAddressRepository addressRepository = factory.getImplementation(TestAddressRepository.class);
-        TestCityRepository cityRepository = factory.getImplementation(TestCityRepository.class);
-        assertNotNull(addressRepository);
-
-        TestCityEntity city = new TestCityEntity();
-        city.setName("city");
-        cityRepository.save(city);
-
-        TestCityEntity city2 = new TestCityEntity();
-        city2.setName("city2");
-        cityRepository.save(city2);
-
-        TestAddressEntity address = new TestAddressEntity();
-        address.setStreet("street");
-        address.setZipCode("zip");
-        address.setCity(city);
-        addressRepository.save(address);
-
-        TestAddressEntity address2 = new TestAddressEntity();
-        address2.setStreet("street2");
-        address2.setZipCode("zip2");
-        address2.setCity(city);
-        addressRepository.save(address2);
-
-        TestAddressEntity address3 = new TestAddressEntity();
-        address3.setStreet("street3");
-        address3.setZipCode("zip3");
-        address3.setCity(city);
-        addressRepository.save(address3);
-
-        List<TestCityEntity> testCityEntities = cityRepository.findAllByAddressesStreet("street");
-        assertEquals(1, testCityEntities.size());
-        assertEquals("city", testCityEntities.get(0).getName());
     }
 
     @Entity

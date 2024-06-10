@@ -12,12 +12,6 @@ public class EntityInformation {
         this.entityClass = entityClass;
     }
 
-    public boolean isCollection(String fieldName) {
-        return entityFields.stream()
-                .filter(field -> field.getFieldName().equals(fieldName))
-                .anyMatch(EntityField::isCollection);
-    }
-
     public boolean hasField(String fieldName) {
         return entityFields.stream()
                 .anyMatch(field -> field.getFieldName().equals(fieldName));

@@ -5,14 +5,12 @@ public class EntityField {
     private final String fieldName;
     private final Class<?> fieldType;
     private final EntityInformation entityInformation;
-    private final boolean isCollection;
 
-    public EntityField(String columnName, String fieldName, Class<?> fieldType, EntityInformation entityInformation, boolean isCollection) {
+    public EntityField(String columnName, String fieldName, Class<?> fieldType, EntityInformation entityInformation) {
         this.columnName = columnName;
         this.fieldName = fieldName;
         this.fieldType = fieldType;
         this.entityInformation = entityInformation;
-        this.isCollection = isCollection;
     }
 
     public String getColumnName() {
@@ -29,9 +27,5 @@ public class EntityField {
 
     public EntityInformation getEntityInformation() {
         return entityInformation;
-    }
-
-    public boolean isCollection() {
-        return isCollection;
     }
 }
