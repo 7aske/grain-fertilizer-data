@@ -1,34 +1,215 @@
 package com._7aske.grain.data.factory;
 
-import com._7aske.grain.data.repository.AbstractCrudRepository;
 import com._7aske.grain.data.repository.CrudRepository;
 import jakarta.persistence.*;
-import net.bytebuddy.ByteBuddy;
-import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.description.type.TypeList;
-import net.bytebuddy.dynamic.DynamicType;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import java.lang.reflect.InvocationTargetException;
+import java.time.LocalDate;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class GrainDataRepositoryFactoryTest {
+
+    public interface TestAddressRepository extends CrudRepository<TestAddressEntity, Long> {
+    }
+
+    public interface TestCityRepository extends CrudRepository<TestCityEntity, Long> {
+        List<TestCityEntity> findAllByAddressesStreet(String street);
+    }
+
+    public interface TestUserRepository extends CrudRepository<TestUserEntity, Long> {
+        List<TestUserEntity> findAllByName(String name);
+        List<TestUserEntity> findAllByNameStartsWith(String name);
+        List<TestUserEntity> findAllByAgeLessEqualThan(int age);
+        List<TestUserEntity> findAllByBirthDateGreaterThan(LocalDate birthDate);
+        List<TestUserEntity> findAllByAddressCityName(String city);
+    }
+
+    Configuration configuration;
+    GrainDataRepositoryFactory factory;
+
+    @BeforeEach
+    void setup() {
+        configuration = new Configuration();
+        configuration.setProperty("hibernate.connection.url", "jdbc:h2:mem:test");
+        configuration.setProperty("hibernate.connection.driver_class", "org.h2.Driver");
+        configuration.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
+        configuration.setProperty("hibernate.hbm2ddl.auto", "create");
+        configuration.addAnnotatedClass(TestUserEntity.class);
+        configuration.addAnnotatedClass(TestAddressEntity.class);
+        configuration.addAnnotatedClass(TestCityEntity.class);
+        SessionFactory sessionFactory = configuration.buildSessionFactory();
+        factory = new GrainDataRepositoryFactory(sessionFactory);
+    }
+
+    @Test
+    void test() {
+        TestUserRepository testUserRepository = factory.getImplementation(TestUserRepository.class);
+        assertNotNull(testUserRepository);
+
+        TestUserEntity entity = new TestUserEntity();
+        testUserRepository.save(entity);
+
+        TestUserEntity found = testUserRepository.findById(entity.getId());
+        assertNotNull(found);
+        assertEquals(1L, found.getId());
+    }
+
+    @Test
+    void testFindByName() {
+        TestUserRepository testUserRepository = factory.getImplementation(TestUserRepository.class);
+        assertNotNull(testUserRepository);
+
+        TestUserEntity entity = new TestUserEntity();
+        entity.setName("test");
+        testUserRepository.save(entity);
+
+        List<TestUserEntity> found = testUserRepository.findAllByName("test");
+
+        assertNotNull(found);
+        assertEquals(1, found.size());
+        assertEquals("test", found.get(0).getName());
+    }
+
+    @Test
+    void testFindByLike() {
+        TestUserRepository testUserRepository = factory.getImplementation(TestUserRepository.class);
+        assertNotNull(testUserRepository);
+
+        TestUserEntity entity = new TestUserEntity();
+        entity.setName("test");
+        testUserRepository.save(entity);
+
+        List<TestUserEntity> found = testUserRepository.findAllByNameStartsWith("te");
+
+        assertNotNull(found);
+        assertEquals(1, found.size());
+        assertEquals("test", found.get(0).getName());
+    }
+
+    @Test
+    void testAge() {
+        TestUserRepository testUserRepository = factory.getImplementation(TestUserRepository.class);
+        assertNotNull(testUserRepository);
+
+        TestUserEntity entity = new TestUserEntity();
+        entity.setName("test");
+        entity.setAge(20);
+        testUserRepository.save(entity);
+
+        List<TestUserEntity> found = testUserRepository.findAllByAgeLessEqualThan(20);
+
+        assertNotNull(found);
+        assertEquals(1, found.size());
+        assertEquals("test", found.get(0).getName());
+        assertEquals(20, found.get(0).getAge());
+    }
+
+    @Test
+    void testFindAll() {
+        TestUserRepository testUserRepository = factory.getImplementation(TestUserRepository.class);
+        assertNotNull(testUserRepository);
+
+        TestUserEntity entity = new TestUserEntity();
+        entity.setName("test");
+        entity.setBirthDate(LocalDate.of(2000, 1, 1));
+        testUserRepository.save(entity);
+
+        List<TestUserEntity> found = testUserRepository.findAllByBirthDateGreaterThan(LocalDate.of(1999, 12, 31));
+
+        assertNotNull(found);
+        assertEquals(1, found.size());
+        assertEquals("test", found.get(0).getName());
+    }
+
+    @Test
+    void testFindByAddressCity() {
+        TestUserRepository testUserRepository = factory.getImplementation(TestUserRepository.class);
+        TestAddressRepository addressRepository = factory.getImplementation(TestAddressRepository.class);
+        TestCityRepository cityRepository = factory.getImplementation(TestCityRepository.class);
+        assertNotNull(testUserRepository);
+
+        TestCityEntity city = new TestCityEntity();
+        city.setName("city");
+        cityRepository.save(city);
+
+        TestAddressEntity address = new TestAddressEntity();
+        address.setCity(city);
+        addressRepository.save(address);
+
+        TestUserEntity entity = new TestUserEntity();
+        entity.setName("test");
+        entity.setAddress(address);
+        testUserRepository.save(entity);
+
+        List<TestUserEntity> found = testUserRepository.findAllByAddressCityName("city");
+
+        assertNotNull(found);
+        assertEquals(1, found.size());
+        assertEquals("test", found.get(0).getName());
+    }
+
+    @Test
+    void testOneToMany() {
+        TestAddressRepository addressRepository = factory.getImplementation(TestAddressRepository.class);
+        TestCityRepository cityRepository = factory.getImplementation(TestCityRepository.class);
+        assertNotNull(addressRepository);
+
+        TestCityEntity city = new TestCityEntity();
+        city.setName("city");
+        cityRepository.save(city);
+
+        TestCityEntity city2 = new TestCityEntity();
+        city2.setName("city2");
+        cityRepository.save(city2);
+
+        TestAddressEntity address = new TestAddressEntity();
+        address.setStreet("street");
+        address.setZipCode("zip");
+        address.setCity(city);
+        addressRepository.save(address);
+
+        TestAddressEntity address2 = new TestAddressEntity();
+        address2.setStreet("street2");
+        address2.setZipCode("zip2");
+        address2.setCity(city);
+        addressRepository.save(address2);
+
+        TestAddressEntity address3 = new TestAddressEntity();
+        address3.setStreet("street3");
+        address3.setZipCode("zip3");
+        address3.setCity(city);
+        addressRepository.save(address3);
+
+        List<TestCityEntity> testCityEntities = cityRepository.findAllByAddressesStreet("street");
+        assertEquals(1, testCityEntities.size());
+        assertEquals("city", testCityEntities.get(0).getName());
+    }
+
     @Entity
-    public static class TestEntity {
+    public static class TestUserEntity {
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         private Long id;
 
         @Column(name = "name")
         private String name;
+
+        @Column(name = "age")
+        private int age;
+
+        @Column(name = "birth_date")
+        private LocalDate birthDate;
+
+        @ManyToOne
+        private TestAddressEntity address;
 
         public Long getId() {
             return id;
@@ -45,56 +226,115 @@ class GrainDataRepositoryFactoryTest {
         public void setName(String name) {
             this.name = name;
         }
+
+        public int getAge() {
+            return age;
+        }
+
+        public void setAge(int age) {
+            this.age = age;
+        }
+
+        public LocalDate getBirthDate() {
+            return birthDate;
+        }
+
+        public void setBirthDate(LocalDate birthDate) {
+            this.birthDate = birthDate;
+        }
+
+        public TestAddressEntity getAddress() {
+            return address;
+        }
+
+        public void setAddress(TestAddressEntity address) {
+            this.address = address;
+        }
     }
 
-    public interface TestRepository extends CrudRepository<TestEntity, Long> {
-        List<TestEntity> findAllByNameNotEquals(String name);
+    @Entity
+    public static class TestAddressEntity {
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
+
+        @ManyToOne
+        private TestCityEntity city;
+
+        @Column(name = "street")
+        private String street;
+
+        @Column(name = "zip_code")
+        private String zipCode;
+
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public TestCityEntity getCity() {
+            return city;
+        }
+
+        public void setCity(TestCityEntity city) {
+            this.city = city;
+        }
+
+        public String getStreet() {
+            return street;
+        }
+
+        public void setStreet(String street) {
+            this.street = street;
+        }
+
+        public String getZipCode() {
+            return zipCode;
+        }
+
+        public void setZipCode(String zipCode) {
+            this.zipCode = zipCode;
+        }
     }
 
-    Configuration configuration;
+    @Entity
+    public static class TestCityEntity {
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
 
-    @BeforeEach
-    void setup() {
-        configuration = new Configuration();
-        configuration.setProperty("hibernate.connection.url", "jdbc:h2:mem:test");
-        configuration.setProperty("hibernate.connection.driver_class", "org.h2.Driver");
-        configuration.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
-        configuration.setProperty("hibernate.hbm2ddl.auto", "create");
-    }
+        @Column(name = "name")
+        private String name;
 
-    @Test
-    void test() {
-        configuration.addAnnotatedClass(TestEntity.class);
-        SessionFactory sessionFactory = configuration.buildSessionFactory();
-        GrainDataRepositoryFactory factory = new GrainDataRepositoryFactory(sessionFactory);
-        AbstractCrudRepository<TestEntity, Long> testRepository = (AbstractCrudRepository<TestEntity, Long>) factory.getImplementation(TestRepository.class);
-        assertNotNull(testRepository);
+        @OneToMany
+        private List<TestAddressEntity> addresses;
 
-        TestEntity entity = new TestEntity();
-        testRepository.save(entity);
+        public Long getId() {
+            return id;
+        }
 
-        TestEntity found = testRepository.findById(entity.getId());
-        assertNotNull(found);
-        assertEquals(1L, found.getId());
-    }
+        public void setId(Long id) {
+            this.id = id;
+        }
 
-    @Test
-    @Disabled
-    void testFindByName() {
-        configuration.addAnnotatedClass(TestEntity.class);
-        SessionFactory sessionFactory = configuration.buildSessionFactory();
-        GrainDataRepositoryFactory factory = new GrainDataRepositoryFactory(sessionFactory);
-        AbstractCrudRepository<TestEntity, Long> testRepository = (AbstractCrudRepository<TestEntity, Long>) factory.getImplementation(TestRepository.class);
-        assertNotNull(testRepository);
+        public String getName() {
+            return name;
+        }
 
-        TestEntity entity = new TestEntity();
-        entity.setName("test");
-        testRepository.save(entity);
+        public void setName(String name) {
+            this.name = name;
+        }
 
-        List<TestEntity> found = ((TestRepository) testRepository).findAllByNameNotEquals("test1");
+        public List<TestAddressEntity> getAddresses() {
+            return addresses;
+        }
 
-        assertNotNull(found);
-        assertEquals(1, found.size());
-        assertEquals("test", found.get(0).getName());
+        public void setAddresses(List<TestAddressEntity> addresses) {
+            this.addresses = addresses;
+        }
     }
 }

@@ -1,15 +1,25 @@
 package com._7aske.grain.data.dsl;
 
+import com._7aske.grain.data.dsl.ast.FieldNode;
 import com._7aske.grain.data.dsl.token.FieldToken;
 import com._7aske.grain.data.dsl.token.OperationToken;
 import com._7aske.grain.data.dsl.token.Token;
+import com._7aske.grain.data.meta.EntityInformation;
 import com._7aske.grain.util.StringUtils;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 
 public class DslLexer {
+    private final EntityInformation entityInformation;
+
+    public DslLexer(EntityInformation entityInformation) {
+        this.entityInformation = entityInformation;
+    }
+
+
     public LexingResult lex(String dsl) {
         LexingResult lexingResult = new LexingResult();
         for (RootOperation rootOperation : RootOperation.values()) {
@@ -20,7 +30,7 @@ public class DslLexer {
             }
         }
 
-        List<Token> tokens = new ArrayList<>();
+        Deque<Token> tokens = new ArrayDeque<>();
 
         while (!dsl.isEmpty()) {
             StringBuilder token = new StringBuilder();
@@ -28,18 +38,22 @@ public class DslLexer {
                 token.append(dsl.charAt(0));
                 dsl = dsl.substring(1);
 
-                for (Operation operation : Operation.values()) {
-                    if (token.toString().endsWith(operation.getRepr())) {
-                        String field = StringUtils.uncapitalize(token.substring(0, token.length() - operation.getRepr().length()));
-                        token.setLength(0);
+                String asOperation = token.toString();
+                String asField = StringUtils.uncapitalize(asOperation);
 
-                        if (!field.isEmpty()) {
-                            tokens.add(new FieldToken(field));
+                if (entityInformation.hasField(tokens.peekLast() instanceof FieldToken fieldtoken ? fieldtoken.getField() : null, asField)) {
+                    tokens.add(new FieldToken(asField));
+                    token.setLength(0);
+                } else {
+                    for (Operation operation : Operation.values()) {
+                        if (asOperation.equals(operation.getRepr())) {
+                            tokens.add(new OperationToken(operation));
+                            token.setLength(0);
+                            break;
                         }
-
-                        tokens.add(new OperationToken(operation));
                     }
                 }
+
             } while (!dsl.isBlank());
 
             if (!token.isEmpty()) {
@@ -47,7 +61,7 @@ public class DslLexer {
             }
         }
 
-        lexingResult.setTokens(new ArrayDeque<>(tokens));
+        lexingResult.setTokens(tokens);
 
         return lexingResult;
     }

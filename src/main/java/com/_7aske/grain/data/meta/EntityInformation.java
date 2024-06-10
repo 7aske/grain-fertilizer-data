@@ -12,8 +12,27 @@ public class EntityInformation {
         this.entityClass = entityClass;
     }
 
+    public boolean isCollection(String fieldName) {
+        return entityFields.stream()
+                .filter(field -> field.getFieldName().equals(fieldName))
+                .anyMatch(EntityField::isCollection);
+    }
+
     public boolean hasField(String fieldName) {
-        return entityFields.stream().anyMatch(field -> field.getFieldName().equals(fieldName));
+        return entityFields.stream()
+                .anyMatch(field -> field.getFieldName().equals(fieldName));
+    }
+
+    public boolean hasField(String join, String fieldName) {
+        if (join == null) {
+            return hasField(fieldName);
+        }
+
+        return entityFields.stream().filter(field -> field.getFieldName().equals(join))
+                .findFirst()
+                .filter(field -> field.getEntityInformation() != null)
+                .map(field -> field.getEntityInformation().hasField(fieldName))
+                .orElse(false);
     }
 
     public String getEntityName() {

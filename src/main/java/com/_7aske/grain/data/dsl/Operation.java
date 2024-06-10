@@ -7,8 +7,8 @@ public enum Operation {
     EQUALS("Equals", 4),
     GREATER_THAN("GreaterThan", 4),
     LESS_THAN("LessThan", 4),
-    GREATER_THAN_EQUALS("GreaterThanEquals", 4),
-    LESS_THAN_EQUALS("LessThanEquals", 4),
+    GREATER_THAN_EQUALS("GreaterEqualThan", 4),
+    LESS_THAN_EQUALS("LessEqualThan", 4),
     LIKE("Like", 4),
     IN("In", 4),
     CONTAINS("Contains", 3),
@@ -20,7 +20,6 @@ public enum Operation {
     IS_EMPTY("IsEmpty", 3),
     IS_TRUE("IsTrue", 3),
     IS_FALSE("IsFalse", 3);
-//    BETWEEN("Between"),
 
     private final String repr;
     private final int precedence;

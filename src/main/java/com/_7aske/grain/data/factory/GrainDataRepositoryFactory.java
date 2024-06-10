@@ -23,17 +23,17 @@ import java.util.*;
 public class GrainDataRepositoryFactory implements GrainFactory {
     private static final ClassLoader CLASS_LOADER = Thread.currentThread().getContextClassLoader();
     private final SessionFactory sessionFactory;
-    private final Map<Class<?>, Object> implementationCache;
+    private final RepositoryCache repositoryCache;
 
     public GrainDataRepositoryFactory(SessionFactory sessionFactory) {
         this.sessionFactory = sessionFactory;
-        this.implementationCache = new HashMap<>();
+        this.repositoryCache = new RepositoryCache();
     }
 
 
-    Object getImplementation(Class<?> clazz) {
-        if (implementationCache.containsKey(clazz)) {
-            return implementationCache.get(clazz);
+   <T> T getImplementation(Class<T> clazz) {
+        if (repositoryCache.contains(clazz)) {
+            return repositoryCache.get(clazz);
         }
 
         DynamicType.Builder<?> byteBuddy = new ByteBuddy()
@@ -71,15 +71,15 @@ public class GrainDataRepositoryFactory implements GrainFactory {
 
             interceptors.forEach(interceptor -> interceptor.setEntityClass(entityClass));
 
-            Object abstractCrudRepository = unloaded
+            T repositoryImplementation = (T) unloaded
                     .load(CLASS_LOADER, ClassLoadingStrategy.Default.INJECTION)
                     .getLoaded()
                     .getConstructor(SessionFactory.class, Class.class)
                     .newInstance(sessionFactory, entityClass);
 
-            implementationCache.put(clazz, abstractCrudRepository);
+            repositoryCache.put(clazz, repositoryImplementation);
 
-            return abstractCrudRepository;
+            return repositoryImplementation;
         } catch (ClassNotFoundException | InvocationTargetException |
                  InstantiationException | IllegalAccessException |
                  NoSuchMethodException e) {

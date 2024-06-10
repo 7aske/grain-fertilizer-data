@@ -13,16 +13,16 @@ class DslParserTest {
 
     @Test
     void testTokenize() {
-//        String methodName = "findByNameLikeAndAgeNotGreaterThan";
-        String methodName = "findByNameAndAgeNot";
+        String methodName = "findByNameLikeAndAgeNotGreaterThan";
+//        String methodName = "findByNameAndAgeNot";
 
-        EntityInformation entityInformation = new EntityInformation(Object.class);
+        EntityInformation entityInformation = new EntityInformation(null);
         entityInformation.setEntityFields(List.of(
-                new EntityField("name", "name", String.class),
-                new EntityField("age", "age", Integer.class)
+                new EntityField("name", "name", String.class, null, false),
+                new EntityField("age", "age", Integer.class, null, false)
         ));
 
-        DslParser parser = new DslParser(entityInformation, new Object[]{"John", 20});
+        DslParser parser = new DslParser(entityInformation);
         ParsingResult parsingResult = parser.parse(methodName);
 
         System.out.println(parsingResult);
