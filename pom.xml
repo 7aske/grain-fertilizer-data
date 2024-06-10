@@ -32,6 +32,12 @@
         </dependency>
         <dependency>
             <groupId>com.7aske.grain</groupId>
+            <artifactId>core</artifactId>
+            <version>${grain.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.7aske.grain</groupId>
             <artifactId>web</artifactId>
             <version>${grain.version}</version>
             <scope>compile</scope>
