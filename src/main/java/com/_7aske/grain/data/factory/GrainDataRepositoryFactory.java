@@ -8,13 +8,13 @@ import com._7aske.grain.core.reflect.factory.GrainFactory;
 import com._7aske.grain.data.repository.AbstractCrudRepository;
 import com._7aske.grain.data.repository.CrudRepository;
 import com._7aske.grain.data.repository.Repository;
+import com._7aske.grain.data.session.SessionProvider;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.description.type.TypeList;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.implementation.MethodDelegation;
-import org.hibernate.SessionFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -22,11 +22,11 @@ import java.util.*;
 
 public class GrainDataRepositoryFactory implements GrainFactory {
     private static final ClassLoader CLASS_LOADER = Thread.currentThread().getContextClassLoader();
-    private final SessionFactory sessionFactory;
+    private final SessionProvider sessionProvider;
     private final RepositoryCache repositoryCache;
 
-    public GrainDataRepositoryFactory(SessionFactory sessionFactory) {
-        this.sessionFactory = sessionFactory;
+    public GrainDataRepositoryFactory(SessionProvider sessionProvider) {
+        this.sessionProvider = sessionProvider;
         this.repositoryCache = new RepositoryCache();
     }
 
@@ -44,7 +44,7 @@ public class GrainDataRepositoryFactory implements GrainFactory {
 
         for (Method method : clazz.getDeclaredMethods()) {
             RepositoryAbstractMethodResolverInterceptor interceptor =
-                    new RepositoryAbstractMethodResolverInterceptor(sessionFactory);
+                    new RepositoryAbstractMethodResolverInterceptor(sessionProvider);
 
             byteBuddy = byteBuddy.define(method)
                     .intercept(MethodDelegation.to(ProxyInterceptorWrapper.wrap(interceptor)))
@@ -74,8 +74,8 @@ public class GrainDataRepositoryFactory implements GrainFactory {
             T repositoryImplementation = (T) unloaded
                     .load(CLASS_LOADER, ClassLoadingStrategy.Default.INJECTION)
                     .getLoaded()
-                    .getConstructor(SessionFactory.class, Class.class)
-                    .newInstance(sessionFactory, entityClass);
+                    .getConstructor(SessionProvider.class, Class.class)
+                    .newInstance(sessionProvider, entityClass);
 
             repositoryCache.put(clazz, repositoryImplementation);
 

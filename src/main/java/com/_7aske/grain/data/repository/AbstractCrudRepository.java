@@ -1,133 +1,142 @@
 package com._7aske.grain.data.repository;
 
 import com._7aske.grain.data.dsl.Specification;
+import com._7aske.grain.data.session.SessionProvider;
 import com._7aske.grain.web.page.Pageable;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
-import org.hibernate.SessionFactory;
+import org.hibernate.Session;
 
 import java.util.List;
 
 public class AbstractCrudRepository<T, ID> implements CrudRepository<T, ID> {
-    private final SessionFactory sessionFactory;
+    private final SessionProvider sessionProvider;
     private final Class<T> clazz;
 
-    protected AbstractCrudRepository(SessionFactory sessionFactory, Class<T> clazz) {
-        this.sessionFactory = sessionFactory;
+    protected AbstractCrudRepository(SessionProvider sessionProvider, Class<T> clazz) {
+        this.sessionProvider = sessionProvider;
         this.clazz = clazz;
     }
 
     @Override
     public List<T> findAll(Specification<T> specification, Pageable pageable) {
-        try (EntityManager entityManager = sessionFactory.createEntityManager()) {
-            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-            CriteriaQuery<T> query = cb.createQuery(clazz);
-            Root<T> root = query.from(clazz);
-            CriteriaQuery<T> select = query.select(query.from(clazz));
+        Session session = sessionProvider.getSession();
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<T> query = cb.createQuery(clazz);
+        Root<T> root = query.from(clazz);
 
-            return entityManager.createQuery(select.where(specification.toPredicate(root, query, cb)))
-                    .setFirstResult(pageable.getPageOffset())
-                    .setMaxResults(pageable.getPageSize())
-                    .getResultList();
-        }
+        return session.createQuery(query.select(query.from(clazz))
+                        .where(specification.toPredicate(root, query, cb)))
+                .setFirstResult(pageable.getPageOffset())
+                .setMaxResults(pageable.getPageSize())
+                .getResultList();
     }
 
     @Override
     public List<T> findAll(Specification<T> specification) {
-        try (EntityManager entityManager = sessionFactory.createEntityManager()) {
-            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-            CriteriaQuery<T> query = cb.createQuery(clazz);
-            Root<T> root = query.from(clazz);
-            CriteriaQuery<T> select = query.select(query.from(clazz));
+        Session session = sessionProvider.getSession();
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<T> query = cb.createQuery(clazz);
+        Root<T> root = query.from(clazz);
 
-            return entityManager.createQuery(select.where(specification.toPredicate(root, query, cb)))
-                    .getResultList();
-        }
+        return session.createQuery(query.select(query.from(clazz))
+                        .where(specification.toPredicate(root, query, cb)))
+                .getResultList();
     }
 
     @Override
     public T findById(ID id) {
-        try(EntityManager entityManager = sessionFactory.createEntityManager()) {
-            return entityManager.find(clazz, id);
-        }
+        Session session = sessionProvider.getSession();
+        return session.find(clazz, id);
     }
 
     @Override
     public List<T> findAll(Pageable pageable) {
-        try(EntityManager entityManager = sessionFactory.createEntityManager()) {
-            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-            CriteriaQuery<T> query = cb.createQuery(clazz);
-            CriteriaQuery<T> select = query.select(query.from(clazz));
-            return entityManager.createQuery(select)
-                    .setFirstResult(pageable.getPageOffset())
-                    .setMaxResults(pageable.getPageSize())
-                    .getResultList();
-        }
+        Session session = sessionProvider.getSession();
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<T> query = cb.createQuery(clazz);
+        CriteriaQuery<T> select = query.select(query.from(clazz));
+        return session.createQuery(select).setFirstResult(pageable.getPageOffset()).setMaxResults(pageable.getPageSize()).getResultList();
     }
 
     @Override
     public List<T> findAll() {
-        try(EntityManager entityManager = sessionFactory.createEntityManager()) {
-            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-            CriteriaQuery<T> query = cb.createQuery(clazz);
-            CriteriaQuery<T> select = query.select(query.from(clazz));
-            return entityManager.createQuery(select).getResultList();
-        }
+        Session session = sessionProvider.getSession();
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<T> query = cb.createQuery(clazz);
+
+        return session.createQuery(query.select(query.from(clazz)))
+                .getResultList();
     }
 
     @Override
     public T save(T entity) {
-        try(EntityManager entityManager = sessionFactory.createEntityManager()) {
-            entityManager.getTransaction().begin();
-            entityManager.persist(entity);
-            entityManager.getTransaction().commit();
+        Session session = sessionProvider.getSession();
+        try {
+            session.getTransaction().begin();
+            session.persist(entity);
+            session.getTransaction().commit();
             return entity;
+        } catch (Exception e) {
+            session.getTransaction().rollback();
+            throw e;
         }
     }
 
     @Override
     public T update(T entity) {
-        try(EntityManager entityManager = sessionFactory.createEntityManager()) {
-            entityManager.getTransaction().begin();
-            entity = entityManager.merge(entity);
-            entityManager.getTransaction().commit();
+        Session session = sessionProvider.getSession();
+        try {
+            session.getTransaction().begin();
+            entity = session.merge(entity);
+            session.getTransaction().commit();
             return entity;
+        } catch (Exception e) {
+            session.getTransaction().rollback();
+            throw e;
         }
     }
 
     @Override
     public void deleteById(ID id) {
-        try(EntityManager entityManager = sessionFactory.createEntityManager()) {
-            entityManager.getMetamodel().entity(clazz);
-            T entity = entityManager.find(clazz, id);
+        Session session = sessionProvider.getSession();
+        try {
+            session.getMetamodel().entity(clazz);
+            T entity = session.find(clazz, id);
             if (entity == null) {
                 return;
             }
-            entityManager.getTransaction().begin();
-            entityManager.remove(entity);
-            entityManager.getTransaction().commit();
+            session.getTransaction().begin();
+            session.remove(entity);
+            session.getTransaction().commit();
+        } catch (Exception e) {
+            session.getTransaction().rollback();
+            throw e;
         }
     }
 
     @Override
     public void delete(T entity) {
-        try(EntityManager entityManager = sessionFactory.createEntityManager()) {
-            entityManager.getTransaction().begin();
-            entityManager.remove(entity);
-            entityManager.getTransaction().commit();
+        Session session = sessionProvider.getSession();
+        try {
+            session.getTransaction().begin();
+            session.remove(entity);
+            session.getTransaction().commit();
+        } catch (Exception e) {
+            session.getTransaction().rollback();
+            throw e;
         }
     }
 
     @Override
     public long count() {
-        try(EntityManager entityManager = sessionFactory.createEntityManager()) {
-            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-            CriteriaQuery<Long> query = cb.createQuery(Long.class);
-            query.select(cb.count(query.from(clazz)));
-            return entityManager.createQuery(query).getSingleResult();
-        }
+        Session session = sessionProvider.getSession();
+        CriteriaBuilder cb = session.getCriteriaBuilder();
+        CriteriaQuery<Long> query = cb.createQuery(Long.class);
+        query.select(cb.count(query.from(clazz)));
+        return session.createQuery(query).getSingleResult();
     }
 
 }

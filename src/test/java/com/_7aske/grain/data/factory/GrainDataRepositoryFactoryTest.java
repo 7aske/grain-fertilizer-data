@@ -1,10 +1,8 @@
 package com._7aske.grain.data.factory;
 
 import com._7aske.grain.data.repository.CrudRepository;
+import com._7aske.grain.data.session.TestSessionProvider;
 import jakarta.persistence.*;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Root;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,7 +32,6 @@ class GrainDataRepositoryFactoryTest {
 
     Configuration configuration;
     GrainDataRepositoryFactory factory;
-    SessionFactory sessionFactory;
 
     @BeforeEach
     void setup() {
@@ -46,8 +43,8 @@ class GrainDataRepositoryFactoryTest {
         configuration.addAnnotatedClass(TestUserEntity.class);
         configuration.addAnnotatedClass(TestAddressEntity.class);
         configuration.addAnnotatedClass(TestCityEntity.class);
-        sessionFactory = configuration.buildSessionFactory();
-        factory = new GrainDataRepositoryFactory(sessionFactory);
+        SessionFactory sessionFactory = configuration.buildSessionFactory();
+        factory = new GrainDataRepositoryFactory(new TestSessionProvider(sessionFactory));
     }
 
     @Test
