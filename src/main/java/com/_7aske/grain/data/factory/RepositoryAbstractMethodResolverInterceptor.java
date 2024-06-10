@@ -4,6 +4,7 @@ import com._7aske.grain.core.reflect.ProxyInterceptor;
 import com._7aske.grain.data.dsl.ArgumentEvaluator;
 import com._7aske.grain.data.dsl.DslParser;
 import com._7aske.grain.data.dsl.ParsingResult;
+import com._7aske.grain.data.dsl.Specification;
 import com._7aske.grain.data.dsl.ast.Node;
 import com._7aske.grain.data.meta.EntityInformation;
 import com._7aske.grain.data.meta.hibernate.HibernateEntityTypeConverter;
@@ -17,7 +18,6 @@ import net.bytebuddy.implementation.bind.annotation.*;
 import org.hibernate.SessionFactory;
 
 import java.lang.reflect.Method;
-import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -49,8 +49,8 @@ public class RepositoryAbstractMethodResolverInterceptor implements ProxyInterce
 
             ArgumentEvaluator evaluator = new ArgumentEvaluator(args, root, criteriaQuery, criteriaBuilder);
 
-            Expression<Object> where = getQueryAst(entityManager, method)
-                    .toPredicate(evaluator);
+            Expression<?> where = getQueryAst(entityManager, method)
+                    .toExpression(evaluator);
 
             Optional<Pageable> pageable = Stream.of(args)
                     .filter(Pageable.class::isInstance)

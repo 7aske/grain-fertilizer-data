@@ -1,10 +1,15 @@
 package com._7aske.grain.data.repository;
 
+import com._7aske.grain.data.dsl.Specification;
 import com._7aske.grain.web.page.Pageable;
 
 import java.util.List;
 
 public interface CrudRepository<T, ID> extends Repository<T, ID> {
+    List<T> findAll(Specification<T> specification, Pageable pageable);
+
+    List<T> findAll(Specification<T> specification);
+
     T findById(ID id);
 
     List<T> findAll(Pageable pageable);

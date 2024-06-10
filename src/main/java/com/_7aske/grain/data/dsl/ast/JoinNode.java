@@ -22,7 +22,7 @@ public class JoinNode extends NavigableNode {
     }
 
     @Override
-    public <T> Expression<T> toPredicate(ArgumentEvaluator evaluator) {
-        return ((Path<?>) getParent().toPredicate(evaluator)).get(getField());
+    public <T> Expression<T> toExpression(ArgumentEvaluator evaluator) {
+        return ((Path<?>) getParent().toExpression(evaluator)).get(getField());
     }
 }

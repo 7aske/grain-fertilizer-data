@@ -4,5 +4,5 @@ import com._7aske.grain.data.dsl.ArgumentEvaluator;
 import jakarta.persistence.criteria.*;
 
 public abstract class Node {
-    public abstract <T> Expression<T> toPredicate(ArgumentEvaluator argumentEvaluator);
+    public abstract <T> Expression<T> toExpression(ArgumentEvaluator argumentEvaluator);
 }

@@ -14,7 +14,7 @@ public class ValueNode extends Node {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> Expression<T> toPredicate(ArgumentEvaluator evaluator) {
+    public <T> Expression<T> toExpression(ArgumentEvaluator evaluator) {
         return (Expression<T>) evaluator.getBuilder().literal(evaluator.evaluate(argIndex));
     }
 }

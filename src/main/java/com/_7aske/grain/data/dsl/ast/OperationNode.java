@@ -24,42 +24,42 @@ public class OperationNode extends BinaryNode {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> Expression<T> toPredicate(ArgumentEvaluator evaluator) {
+    public <T> Expression<T> toExpression(ArgumentEvaluator evaluator) {
         switch (operation) {
             case AND:
-                return (Expression<T>) (evaluator.getBuilder().and(left.toPredicate(evaluator), right.toPredicate(evaluator)));
+                return (Expression<T>) (evaluator.getBuilder().and(left.toExpression(evaluator), right.toExpression(evaluator)));
             case OR:
-                return (Expression<T>) evaluator.getBuilder().or(left.toPredicate(evaluator), right.toPredicate(evaluator));
+                return (Expression<T>) evaluator.getBuilder().or(left.toExpression(evaluator), right.toExpression(evaluator));
             case EQUALS:
-                return (Expression<T>) evaluator.getBuilder().equal(left.toPredicate(evaluator), right.toPredicate(evaluator));
+                return (Expression<T>) evaluator.getBuilder().equal(left.toExpression(evaluator), right.toExpression(evaluator));
             case NOT:
-                return (Expression<T>) evaluator.getBuilder().not(left.toPredicate(evaluator));
+                return (Expression<T>) evaluator.getBuilder().not(left.toExpression(evaluator));
             case GREATER_THAN:
-                return (Expression<T>) evaluator.getBuilder().greaterThan(left.toPredicate(evaluator), right.toPredicate(evaluator));
+                return (Expression<T>) evaluator.getBuilder().greaterThan(left.toExpression(evaluator), right.toExpression(evaluator));
             case LESS_THAN:
-                return (Expression<T>) evaluator.getBuilder().lessThan(left.toPredicate(evaluator), right.toPredicate(evaluator));
+                return (Expression<T>) evaluator.getBuilder().lessThan(left.toExpression(evaluator), right.toExpression(evaluator));
             case GREATER_THAN_EQUALS:
-                return (Expression<T>) evaluator.getBuilder().greaterThanOrEqualTo(left.toPredicate(evaluator), right.toPredicate(evaluator));
+                return (Expression<T>) evaluator.getBuilder().greaterThanOrEqualTo(left.toExpression(evaluator), right.toExpression(evaluator));
             case LESS_THAN_EQUALS:
-                return (Expression<T>) evaluator.getBuilder().lessThanOrEqualTo(left.toPredicate(evaluator), right.toPredicate(evaluator));
+                return (Expression<T>) evaluator.getBuilder().lessThanOrEqualTo(left.toExpression(evaluator), right.toExpression(evaluator));
             case LIKE:
-                return (Expression<T>) evaluator.getBuilder().like(left.toPredicate(evaluator), wrapLike(evaluator.getBuilder(), right.toPredicate(evaluator)));
+                return (Expression<T>) evaluator.getBuilder().like(left.toExpression(evaluator), wrapLike(evaluator.getBuilder(), right.toExpression(evaluator)));
             case STARTS_WITH:
-                return (Expression<T>) evaluator.getBuilder().like(left.toPredicate(evaluator), wrapStartsWith(evaluator.getBuilder(), right.toPredicate(evaluator)));
+                return (Expression<T>) evaluator.getBuilder().like(left.toExpression(evaluator), wrapStartsWith(evaluator.getBuilder(), right.toExpression(evaluator)));
             case ENDS_WITH:
-                return (Expression<T>) evaluator.getBuilder().like(left.toPredicate(evaluator), wrapEndsWith(evaluator.getBuilder(), right.toPredicate(evaluator)));
+                return (Expression<T>) evaluator.getBuilder().like(left.toExpression(evaluator), wrapEndsWith(evaluator.getBuilder(), right.toExpression(evaluator)));
             case IN:
-                return (Expression<T>) left.toPredicate((evaluator)).in(right.toPredicate(evaluator));
+                return (Expression<T>) left.toExpression((evaluator)).in(right.toExpression(evaluator));
             case IS_NULL:
-                return (Expression<T>) evaluator.getBuilder().isNull(left.toPredicate(evaluator));
+                return (Expression<T>) evaluator.getBuilder().isNull(left.toExpression(evaluator));
             case CONTAINS:
-                return (Expression<T>) evaluator.getBuilder().isMember(right.toPredicate(evaluator), left.<Collection<T>>toPredicate(evaluator));
+                return (Expression<T>) evaluator.getBuilder().isMember(right.toExpression(evaluator), left.<Collection<T>>toExpression(evaluator));
             case IS_EMPTY:
-                return (Expression<T>) evaluator.getBuilder().isEmpty(left.toPredicate(evaluator));
+                return (Expression<T>) evaluator.getBuilder().isEmpty(left.toExpression(evaluator));
             case IS_TRUE:
-                return (Expression<T>) evaluator.getBuilder().isTrue(left.toPredicate(evaluator));
+                return (Expression<T>) evaluator.getBuilder().isTrue(left.toExpression(evaluator));
             case IS_FALSE:
-                return (Expression<T>) evaluator.getBuilder().isFalse(left.toPredicate(evaluator));
+                return (Expression<T>) evaluator.getBuilder().isFalse(left.toExpression(evaluator));
             default:
                 throw new IllegalArgumentException();
         }

@@ -15,7 +15,7 @@ public class FieldNode extends NavigableNode {
     }
 
     @Override
-    public <T> Expression<T> toPredicate(ArgumentEvaluator evaluator) {
+    public <T> Expression<T> toExpression(ArgumentEvaluator evaluator) {
         return evaluator.getRoot().get(field);
     }
 

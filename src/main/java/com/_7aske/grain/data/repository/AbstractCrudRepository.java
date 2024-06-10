@@ -1,9 +1,11 @@
 package com._7aske.grain.data.repository;
 
+import com._7aske.grain.data.dsl.Specification;
 import com._7aske.grain.web.page.Pageable;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 import org.hibernate.SessionFactory;
 
 import java.util.List;
@@ -15,6 +17,34 @@ public class AbstractCrudRepository<T, ID> implements CrudRepository<T, ID> {
     protected AbstractCrudRepository(SessionFactory sessionFactory, Class<T> clazz) {
         this.sessionFactory = sessionFactory;
         this.clazz = clazz;
+    }
+
+    @Override
+    public List<T> findAll(Specification<T> specification, Pageable pageable) {
+        try (EntityManager entityManager = sessionFactory.createEntityManager()) {
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaQuery<T> query = cb.createQuery(clazz);
+            Root<T> root = query.from(clazz);
+            CriteriaQuery<T> select = query.select(query.from(clazz));
+
+            return entityManager.createQuery(select.where(specification.toPredicate(root, query, cb)))
+                    .setFirstResult(pageable.getPageOffset())
+                    .setMaxResults(pageable.getPageSize())
+                    .getResultList();
+        }
+    }
+
+    @Override
+    public List<T> findAll(Specification<T> specification) {
+        try (EntityManager entityManager = sessionFactory.createEntityManager()) {
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaQuery<T> query = cb.createQuery(clazz);
+            Root<T> root = query.from(clazz);
+            CriteriaQuery<T> select = query.select(query.from(clazz));
+
+            return entityManager.createQuery(select.where(specification.toPredicate(root, query, cb)))
+                    .getResultList();
+        }
     }
 
     @Override
