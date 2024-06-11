@@ -53,9 +53,9 @@ public class DslParser {
     private Node createNode(Token token) {
         Node node;
         if (token instanceof FieldToken fieldToken) {
-            Node prev = stack.peek();
+            Node prev = stack.poll();
             if (prev instanceof NavigableNode navigableNode) {
-                if (tokens.isEmpty()) {
+                if (tokens.isEmpty() || tokens.peek() instanceof OperationToken operationToken && operationToken.getOperation().isLogical()) {
                     node = new OperationNode(new JoinNode(navigableNode, fieldToken.getField()), EQUALS, new ValueNode(argIndex++));
                 } else {
                     node = new JoinNode(navigableNode, fieldToken.getField());
