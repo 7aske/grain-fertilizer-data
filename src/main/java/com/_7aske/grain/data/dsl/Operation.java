@@ -11,11 +11,11 @@ public enum Operation {
     LESS_THAN_EQUALS("LessEqualThan", 4),
     LIKE("Like", 4),
     IN("In", 4),
-    CONTAINS("Contains", 3),
+    CONTAINS("Contains", 4),
     STARTS_WITH("StartsWith", 4),
     ENDS_WITH("EndsWith", 4),
 
-    NOT("Not", 3),
+    NOT("Not", 2),
     IS_NULL("IsNull", 3),
     IS_EMPTY("IsEmpty", 3),
     IS_TRUE("IsTrue", 3),

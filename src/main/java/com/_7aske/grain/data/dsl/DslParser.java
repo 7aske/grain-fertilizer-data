@@ -76,9 +76,6 @@ public class DslParser {
                 if (!tokens.isEmpty()) {
                     stack.push(node);
                     node = parseNode();
-                } else {
-                    Node field = new OperationNode(((BinaryNode) node).getLeft(), EQUALS, new ValueNode(argIndex++));
-                    ((BinaryNode) node).setLeft(field);
                 }
             } else if (operationToken.getOperation().isLiteral()) {
                 node = new OperationNode(stack.poll(), operationToken.getOperation(), new ValueNode(argIndex++));

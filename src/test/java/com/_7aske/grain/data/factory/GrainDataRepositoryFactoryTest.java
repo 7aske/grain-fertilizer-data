@@ -20,6 +20,12 @@ class GrainDataRepositoryFactoryTest {
     }
 
     public interface TestCityRepository extends CrudRepository<TestCityEntity, Long> {
+        List<TestCityEntity> findAllByAddressesContains(TestAddressEntity address);
+        List<TestCityEntity> findAllByAddressesNotContains(TestAddressEntity address);
+        List<TestCityEntity> findAllByAddressesNotIsEmpty();
+        List<TestCityEntity> findAllByAddressesIsEmpty();
+        List<TestCityEntity> findAllByActiveIsTrue();
+        List<TestCityEntity> findAllByActiveIsFalse();
     }
 
     public interface TestUserRepository extends CrudRepository<TestUserEntity, Long> {
@@ -28,6 +34,10 @@ class GrainDataRepositoryFactoryTest {
         List<TestUserEntity> findAllByAgeLessEqualThan(int age);
         List<TestUserEntity> findAllByBirthDateGreaterThan(LocalDate birthDate);
         List<TestUserEntity> findAllByAddressCityName(String city);
+        List<TestUserEntity> findAllByNameNotIn(List<String> names);
+        List<TestUserEntity> findAllByNameIn(List<String> names);
+        List<TestUserEntity> findAllByNameNotIsNull();
+        List<TestUserEntity> findAllByNameIsNull();
     }
 
     Configuration configuration;
@@ -40,6 +50,7 @@ class GrainDataRepositoryFactoryTest {
         configuration.setProperty("hibernate.connection.driver_class", "org.h2.Driver");
         configuration.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
         configuration.setProperty("hibernate.hbm2ddl.auto", "create");
+        configuration.setProperty("hibernate.show_sql", "true");
         configuration.addAnnotatedClass(TestUserEntity.class);
         configuration.addAnnotatedClass(TestAddressEntity.class);
         configuration.addAnnotatedClass(TestCityEntity.class);
@@ -152,6 +163,117 @@ class GrainDataRepositoryFactoryTest {
         assertNotNull(found);
         assertEquals(1, found.size());
         assertEquals("test", found.get(0).getName());
+    }
+
+    @Test
+    void testIn() {
+        TestUserRepository testUserRepository = factory.getImplementation(TestUserRepository.class);
+        assertNotNull(testUserRepository);
+
+        TestUserEntity entity = new TestUserEntity();
+        entity.setName("test");
+        testUserRepository.save(entity);
+
+        List<TestUserEntity> found = testUserRepository.findAllByNameIn(List.of("test"));
+
+        assertNotNull(found);
+        assertEquals(1, found.size());
+        assertEquals("test", found.get(0).getName());
+
+        found = testUserRepository.findAllByNameNotIn(List.of("test"));
+
+        assertNotNull(found);
+        assertEquals(0, found.size());
+    }
+
+    @Test
+    void testContains() {
+        TestCityRepository cityRepository = factory.getImplementation(TestCityRepository.class);
+        TestAddressRepository addressRepository = factory.getImplementation(TestAddressRepository.class);
+        assertNotNull(cityRepository);
+
+
+        TestCityEntity city = new TestCityEntity();
+        city.setName("city");
+        cityRepository.save(city);
+
+        TestAddressEntity address = new TestAddressEntity();
+        address.setCity(city);
+        addressRepository.save(address);
+
+        List<TestCityEntity> found = cityRepository.findAllByAddressesContains(address);
+
+        assertNotNull(found);
+        assertEquals(1, found.size());
+        assertEquals("city", found.get(0).getName());
+
+        found = cityRepository.findAllByAddressesNotContains(address);
+
+        assertNotNull(found);
+        assertEquals(0, found.size());
+    }
+
+    @Test
+    void testNull() {
+        TestUserRepository testUserRepository = factory.getImplementation(TestUserRepository.class);
+        assertNotNull(testUserRepository);
+
+        TestUserEntity entity = new TestUserEntity();
+        entity.setName("test");
+        testUserRepository.save(entity);
+
+        List<TestUserEntity> found = testUserRepository.findAllByNameIsNull();
+
+        assertNotNull(found);
+        assertEquals(0, found.size());
+
+        found = testUserRepository.findAllByNameNotIsNull();
+
+        assertNotNull(found);
+        assertEquals(1, found.size());
+        assertEquals("test", found.get(0).getName());
+    }
+
+    @Test
+    void testIsEmpty() {
+        TestCityRepository testCityRepository = factory.getImplementation(TestCityRepository.class);
+        assertNotNull(testCityRepository);
+
+        TestCityEntity entity = new TestCityEntity();
+        entity.setName("test");
+        testCityRepository.save(entity);
+
+        List<TestCityEntity> found = testCityRepository.findAllByAddressesIsEmpty();
+
+        assertNotNull(found);
+        assertEquals(1, found.size());
+        assertEquals("test", found.get(0).getName());
+
+        found = testCityRepository.findAllByAddressesNotIsEmpty();
+
+        assertNotNull(found);
+        assertEquals(0, found.size());
+    }
+
+    @Test
+    void testIsTrue() {
+        TestCityRepository testCityRepository = factory.getImplementation(TestCityRepository.class);
+        assertNotNull(testCityRepository);
+
+        TestCityEntity entity = new TestCityEntity();
+        entity.setName("test");
+        entity.setActive(true);
+        testCityRepository.save(entity);
+
+        List<TestCityEntity> found = testCityRepository.findAllByActiveIsTrue();
+
+        assertNotNull(found);
+        assertEquals(1, found.size());
+        assertEquals("test", found.get(0).getName());
+
+        found = testCityRepository.findAllByActiveIsFalse();
+        assertNotNull(found);
+        assertEquals(0, found.size());
     }
 
     @Entity
@@ -271,8 +393,11 @@ class GrainDataRepositoryFactoryTest {
         @Column(name = "name")
         private String name;
 
-        @OneToMany
+        @OneToMany(mappedBy = "city")
         private List<TestAddressEntity> addresses;
+
+        @Column(name = "active")
+        private Boolean active;
 
         public Long getId() {
             return id;
@@ -296,6 +421,14 @@ class GrainDataRepositoryFactoryTest {
 
         public void setAddresses(List<TestAddressEntity> addresses) {
             this.addresses = addresses;
+        }
+
+        public Boolean getActive() {
+            return active;
+        }
+
+        public void setActive(Boolean active) {
+            this.active = active;
         }
     }
 }

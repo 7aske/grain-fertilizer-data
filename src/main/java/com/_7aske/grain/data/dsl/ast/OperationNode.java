@@ -9,10 +9,6 @@ import java.util.Collection;
 
 
 public class OperationNode extends BinaryNode {
-    public OperationNode(Operation operation) {
-        super(null, operation, null);
-    }
-
     public OperationNode(Node left, Operation operation, Node right) {
         super(left, operation, right);
     }
@@ -49,11 +45,19 @@ public class OperationNode extends BinaryNode {
             case ENDS_WITH:
                 return (Expression<T>) evaluator.getBuilder().like(left.toExpression(evaluator), wrapEndsWith(evaluator.getBuilder(), right.toExpression(evaluator)));
             case IN:
-                return (Expression<T>) left.toExpression((evaluator)).in(right.toExpression(evaluator));
+                if (right instanceof ValueNode valueNode) {
+                    return (Expression<T>) evaluator.getBuilder().in(left.toExpression(evaluator)).value(valueNode.getValue(evaluator));
+                } else {
+                    return (Expression<T>) evaluator.getBuilder().in(left.toExpression(evaluator)).value(right.toExpression(evaluator));
+                }
             case IS_NULL:
                 return (Expression<T>) evaluator.getBuilder().isNull(left.toExpression(evaluator));
             case CONTAINS:
-                return (Expression<T>) evaluator.getBuilder().isMember(right.toExpression(evaluator), left.<Collection<T>>toExpression(evaluator));
+                if (right instanceof ValueNode valueNode) {
+                    return (Expression<T>) evaluator.getBuilder().isMember(valueNode.getValue(evaluator), left.toExpression(evaluator));
+                } else {
+                    return (Expression<T>) evaluator.getBuilder().isMember(right.toExpression(evaluator), left.<Collection<T>>toExpression(evaluator));
+                }
             case IS_EMPTY:
                 return (Expression<T>) evaluator.getBuilder().isEmpty(left.toExpression(evaluator));
             case IS_TRUE:
