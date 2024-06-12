@@ -55,32 +55,32 @@ public class DslParser {
         if (token instanceof FieldToken fieldToken) {
             Node prev = stack.poll();
             if (prev instanceof NavigableNode navigableNode) {
-                if (tokens.isEmpty() || tokens.peek() instanceof OperationToken operationToken && operationToken.getOperation().isLogical()) {
-                    node = new OperationNode(new JoinNode(navigableNode, fieldToken.getField()), EQUALS, new ValueNode(argIndex++));
+                if (tokens.isEmpty() || tokens.peek() instanceof OperationToken operationToken && operationToken.operation().isLogical()) {
+                    node = new OperationNode(new JoinNode(navigableNode, fieldToken.field()), EQUALS, new ValueNode(argIndex++));
                 } else {
-                    node = new JoinNode(navigableNode, fieldToken.getField());
+                    node = new JoinNode(navigableNode, fieldToken.field());
                 }
-            } else if (entityInformation.hasField(fieldToken.getField())) {
-                node = new FieldNode(fieldToken.getField());
+            } else if (entityInformation.hasField(fieldToken.field())) {
+                node = new FieldNode(fieldToken.field());
                 if (tokens.isEmpty()) {
                     node = new OperationNode(node, EQUALS, new ValueNode(argIndex++));
                 }
             } else {
-                throw new IllegalArgumentException("Unknown field: " + fieldToken.getField());
+                throw new IllegalArgumentException("Unknown field: " + fieldToken.field());
             }
         } else if (token instanceof OperationToken operationToken) {
-            if (operationToken.getOperation().isLogical()) {
-                node = new OperationNode(stack.poll(), operationToken.getOperation(), parseNode());
-            } else if (operationToken.getOperation().isUnary()) {
-                node = new OperationNode(stack.poll(), operationToken.getOperation(), null);
+            if (operationToken.operation().isLogical()) {
+                node = new OperationNode(stack.poll(), operationToken.operation(), parseNode());
+            } else if (operationToken.operation().isUnary()) {
+                node = new OperationNode(stack.poll(), operationToken.operation(), null);
                 if (!tokens.isEmpty()) {
                     stack.push(node);
                     node = parseNode();
                 }
-            } else if (operationToken.getOperation().isLiteral()) {
-                node = new OperationNode(stack.poll(), operationToken.getOperation(), new ValueNode(argIndex++));
+            } else if (operationToken.operation().isLiteral()) {
+                node = new OperationNode(stack.poll(), operationToken.operation(), new ValueNode(argIndex++));
             } else {
-                throw new IllegalArgumentException("Unknown operation: " + operationToken.getOperation());
+                throw new IllegalArgumentException("Unknown operation: " + operationToken.operation());
             }
         } else {
             throw new IllegalArgumentException("Unknown token: " + token);

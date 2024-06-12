@@ -1,6 +1,5 @@
 package com._7aske.grain.data.dsl;
 
-import com._7aske.grain.data.dsl.ast.FieldNode;
 import com._7aske.grain.data.dsl.token.FieldToken;
 import com._7aske.grain.data.dsl.token.OperationToken;
 import com._7aske.grain.data.dsl.token.Token;
@@ -8,9 +7,7 @@ import com._7aske.grain.data.meta.EntityInformation;
 import com._7aske.grain.util.StringUtils;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Deque;
-import java.util.List;
 
 public class DslLexer {
     private final EntityInformation entityInformation;
@@ -41,7 +38,7 @@ public class DslLexer {
                 String asOperation = token.toString();
                 String asField = StringUtils.uncapitalize(asOperation);
 
-                if (entityInformation.hasField(tokens.peekLast() instanceof FieldToken fieldtoken ? fieldtoken.getField() : null, asField)) {
+                if (entityInformation.hasField(tokens.peekLast() instanceof FieldToken fieldtoken ? fieldtoken.field() : null, asField)) {
                     tokens.add(new FieldToken(asField));
                     token.setLength(0);
                 } else {

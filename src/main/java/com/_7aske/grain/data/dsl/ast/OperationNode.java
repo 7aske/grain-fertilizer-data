@@ -14,11 +14,6 @@ public class OperationNode extends BinaryNode {
     }
 
     @Override
-    public String toString() {
-        return "(%s %s %s)".formatted(left, operation, right);
-    }
-
-    @Override
     @SuppressWarnings("unchecked")
     public <T> Expression<T> toExpression(ArgumentEvaluator evaluator) {
         switch (operation) {
@@ -82,6 +77,11 @@ public class OperationNode extends BinaryNode {
     @SuppressWarnings("unchecked")
     private <T> Expression<T> wrapEndsWith(CriteriaBuilder builder , Expression<?> expression) {
         return (Expression<T>) builder.concat("%", (Expression<String>) expression);
+    }
+
+    @Override
+    public String toString() {
+        return "(%s %s %s)".formatted(left, operation, right);
     }
 
 }

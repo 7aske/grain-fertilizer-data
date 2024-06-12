@@ -2,7 +2,7 @@ package com._7aske.grain.data.dsl.ast;
 
 import com._7aske.grain.data.dsl.Operation;
 
-public abstract class BinaryNode extends Node {
+public abstract class BinaryNode implements Node {
     protected Node left;
     protected Operation operation;
     protected Node right;
