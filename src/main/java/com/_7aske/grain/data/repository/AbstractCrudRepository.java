@@ -27,7 +27,7 @@ public class AbstractCrudRepository<T, ID> implements CrudRepository<T, ID> {
         CriteriaQuery<T> query = cb.createQuery(clazz);
         Root<T> root = query.from(clazz);
 
-        return session.createQuery(query.select(query.from(clazz))
+        return session.createQuery(query.select(root)
                         .where(specification.toPredicate(root, query, cb)))
                 .setFirstResult(pageable.getPageOffset())
                 .setMaxResults(pageable.getPageSize())
@@ -41,7 +41,7 @@ public class AbstractCrudRepository<T, ID> implements CrudRepository<T, ID> {
         CriteriaQuery<T> query = cb.createQuery(clazz);
         Root<T> root = query.from(clazz);
 
-        return session.createQuery(query.select(query.from(clazz))
+        return session.createQuery(query.select(root)
                         .where(specification.toPredicate(root, query, cb)))
                 .getResultList();
     }

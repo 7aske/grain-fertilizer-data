@@ -276,6 +276,28 @@ class GrainDataRepositoryFactoryTest {
         assertEquals(0, found.size());
     }
 
+    @Test
+    void testSpecification() {
+        TestCityRepository testCityRepository = factory.getImplementation(TestCityRepository.class);
+        assertNotNull(testCityRepository);
+
+        TestCityEntity entity = new TestCityEntity();
+        entity.setName("test");
+        entity.setActive(true);
+        testCityRepository.save(entity);
+
+        entity = new TestCityEntity();
+        entity.setName("city");
+        entity.setActive(true);
+        testCityRepository.save(entity);
+
+        List<TestCityEntity> found = testCityRepository.findAll((root, query, cb) -> cb.equal(root.get("name"), "test"));
+
+        assertNotNull(found);
+        assertEquals(1, found.size());
+        assertEquals("test", found.get(0).getName());
+    }
+
     @Entity
     public static class TestUserEntity {
         @Id
@@ -384,7 +406,8 @@ class GrainDataRepositoryFactoryTest {
         }
     }
 
-    @Entity
+    @Entity(name = "city")
+    @Table(name = "city")
     public static class TestCityEntity {
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
