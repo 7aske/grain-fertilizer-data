@@ -22,13 +22,13 @@
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <bytebuddy.version>1.14.10</bytebuddy.version>
-        <grain.version>1.1.5-SNAPSHOT</grain.version>
+        <grain.version>1.1.5</grain.version>
     </properties>
     <dependencies>
         <dependency>
             <groupId>com.7aske.grain</groupId>
             <artifactId>grain-fertilizer-hibernate</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.1</version>
         </dependency>
         <dependency>
             <groupId>com.7aske.grain</groupId>
