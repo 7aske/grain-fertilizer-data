@@ -3,7 +3,6 @@ package com._7aske.grain.data.repository;
 import com._7aske.grain.data.dsl.Specification;
 import com._7aske.grain.data.session.SessionProvider;
 import com._7aske.grain.web.page.Pageable;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;

@@ -8,21 +8,18 @@ import java.lang.annotation.Target;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Annotation for specifying a query to be executed by a repository method.
- * For queries that modify the database, <code>modifying</code> should be set to true.
+ * Annotation for specifying a named parameter mapping in the {@link Query} annotation.
  *
  * <pre>
  *{@code @Query("SELECT u FROM User u WHERE u.status = :status")}
  *{@code List<User> findUsersByStatus(@Param("status") int status);}
  * </pre>
+ *
+ * @see Query
  */
 @Retention(RUNTIME)
 @Documented
-@Target(ElementType.METHOD)
-public @interface Query {
+@Target(ElementType.PARAMETER)
+public @interface Param {
     String value();
-
-    boolean nativeQuery() default false;
-
-    boolean modifying() default false;
 }

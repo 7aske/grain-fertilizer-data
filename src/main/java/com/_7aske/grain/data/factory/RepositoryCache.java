@@ -10,6 +10,7 @@ public class RepositoryCache {
         this.implementationCache = new HashMap<>();
     }
 
+    @SuppressWarnings("unchecked")
     public <T> T get(Class<T> repositoryClass) {
         return (T) implementationCache.get(repositoryClass);
     }

@@ -1,6 +1,5 @@
 package com._7aske.grain.data.factory;
 
-import com._7aske.grain.core.reflect.ProxyInterceptor;
 import com._7aske.grain.data.dsl.ArgumentEvaluator;
 import com._7aske.grain.data.dsl.DslParser;
 import com._7aske.grain.data.dsl.ParsingResult;
@@ -20,7 +19,7 @@ import java.lang.reflect.Method;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public class RepositoryAbstractMethodResolverInterceptor implements ProxyInterceptor {
+public class RepositoryAbstractMethodResolverInterceptor implements RepositoryProxyInterceptor {
     private final SessionProvider sessionProvider;
     private Class<?> entityClass = null;
     private Node queryAst;
@@ -29,6 +28,7 @@ public class RepositoryAbstractMethodResolverInterceptor implements ProxyInterce
         this.sessionProvider = sessionProvider;
     }
 
+    @Override
     public void setEntityClass(Class<?> entityClass) {
         this.entityClass = entityClass;
     }

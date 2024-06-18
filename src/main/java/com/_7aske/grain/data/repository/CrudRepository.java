@@ -5,6 +5,12 @@ import com._7aske.grain.web.page.Pageable;
 
 import java.util.List;
 
+/**
+ * Base interface for CRUD operations.
+ *
+ * @param <T>  Entity type
+ * @param <ID> Entity ID type
+ */
 public interface CrudRepository<T, ID> extends Repository<T, ID> {
     List<T> findAll(Specification<T> specification, Pageable pageable);
 

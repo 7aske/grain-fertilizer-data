@@ -5,6 +5,7 @@ import com._7aske.grain.core.component.Injectable;
 import com._7aske.grain.core.component.Order;
 import com._7aske.grain.core.reflect.ProxyInterceptorWrapper;
 import com._7aske.grain.core.reflect.factory.GrainFactory;
+import com._7aske.grain.data.annotation.Query;
 import com._7aske.grain.data.repository.AbstractCrudRepository;
 import com._7aske.grain.data.repository.CrudRepository;
 import com._7aske.grain.data.repository.Repository;
@@ -18,6 +19,7 @@ import net.bytebuddy.implementation.MethodDelegation;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.*;
 
 public class GrainDataRepositoryFactory implements GrainFactory {
@@ -40,15 +42,26 @@ public class GrainDataRepositoryFactory implements GrainFactory {
                 .subclass(AbstractCrudRepository.class)
                 .implement(clazz);
 
-        List<RepositoryAbstractMethodResolverInterceptor> interceptors = new ArrayList<>(getClass().getDeclaredMethods().length);
+        List<RepositoryProxyInterceptor> interceptors = new ArrayList<>(getClass().getDeclaredMethods().length);
 
         for (Method method : clazz.getDeclaredMethods()) {
-            RepositoryAbstractMethodResolverInterceptor interceptor =
-                    new RepositoryAbstractMethodResolverInterceptor(sessionProvider);
+            RepositoryProxyInterceptor interceptor;
+            if (method.isAnnotationPresent(Query.class)) {
+                interceptor = new RepositoryQueryAnnotationResolverInterceptor(sessionProvider);
+            } else {
+                interceptor = new RepositoryAbstractMethodResolverInterceptor(sessionProvider);
+            }
 
-            byteBuddy = byteBuddy.define(method)
+            DynamicType.Builder.MethodDefinition<?> methodDefinition = byteBuddy.define(method)
                     .intercept(MethodDelegation.to(ProxyInterceptorWrapper.wrap(interceptor)))
                     .annotateMethod(method.getDeclaredAnnotations());
+
+            int i = 0;
+            for (Parameter parameter : method.getParameters()) {
+                methodDefinition = methodDefinition.annotateParameter(i++, parameter.getDeclaredAnnotations());
+            }
+
+            byteBuddy = methodDefinition;
 
             interceptors.add(interceptor);
         }
@@ -98,6 +111,7 @@ public class GrainDataRepositoryFactory implements GrainFactory {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T> T create(Injectable dependency, Object[] args) {
         return (T) getImplementation(dependency.getType());
     }
