@@ -10,7 +10,7 @@
 
     <groupId>com.7aske.grain</groupId>
     <artifactId>grain-fertilizer-data</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.1</version>
     <packaging>jar</packaging>
     <name>grain-fertilizer-data</name>
     <description>Grain Data Starter</description>
@@ -77,7 +77,7 @@
         <url>https://github.com/7aske/grain-fertilizer-data.git</url>
         <connection>scm:git:${project.scm.url}</connection>
         <developerConnection>scm:git:${project.scm.url}</developerConnection>
-        <tag>v1.0.0</tag>
+        <tag>v1.0.1</tag>
     </scm>
 
     <repositories>
